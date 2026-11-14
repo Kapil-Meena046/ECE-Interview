@@ -58,7 +58,7 @@ function closeModal(){if(activeRecognition){activeRecognition.abort();activeReco
 function deleteQuestion(id){if(!confirm('Delete this question and its saved progress?'))return;activeTopic.questions=activeTopic.questions.filter(x=>x.id!==id);delete db.ratings[id];if(!activeTopic.questions.length){activeQ=null}else activeQ=activeTopic.questions[0].id;save();shown=false;practice();toast('Question deleted.')}
 function migrateDb(data){
   data.ratings=data.ratings||{};data.current=data.current||{};data.topics=data.topics||[];data.contentVersions=data.contentVersions||{};
-  if(data.contentVersions.digital!==1){const digital=data.topics.find(t=>t.id==='digital');if(digital){(digital.questions||[]).forEach(q=>delete data.ratings[q.id]);digital.questions=digitalQuestionSet.map(q=>({...q}));data.current.digital=null}data.contentVersions.digital=1}
+  if(data.contentVersions.digital!==1){const digital=data.topics.find(t=>t.id==='digital');if(digital){const legacyIds=new Set(['d1','d2','d3']),existing=(digital.questions||[]).filter(q=>!legacyIds.has(q.id)),byId=new Map(existing.map(q=>[q.id,q]));digital.questions=digitalQuestionSet.map(seed=>{const saved=byId.get(seed.id);return saved?{...saved,...seed}:({...seed})}).concat(existing.filter(q=>!digitalQuestionSet.some(seed=>seed.id===q.id)))}data.contentVersions.digital=1}
   const now=new Date().toISOString();
   data.topics.forEach(t=>(t.questions||[]).forEach(q=>{
     const old=data.ratings[q.id];
